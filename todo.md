@@ -1,3 +1,0 @@
-- [ ] read the article
-- [ ] put a todo list for the project
-- [ ] follow the todo, and finish the project
