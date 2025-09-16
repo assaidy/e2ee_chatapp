@@ -9,10 +9,15 @@ import (
 )
 
 var (
-	ServerPort   = GetEnvInt("SERVER_PORT", 8080)
-	ServerSecret = GetEnvString("SERVER_SECRET")
-	PgUrl        = GetEnvString("PG_URL")
-	ValkeyPort   = GetEnvInt("VALKEY_PORT", 6379)
+	ServerPort        = GetEnvInt("SERVER_PORT", 8080)
+	AppBaseUrl        = GetEnvString("APP_BASE_URL")
+	ServerSecret      = GetEnvString("SERVER_SECRET")
+	PgUrl             = GetEnvString("PG_URL")
+	ValkeyPort        = GetEnvInt("VALKEY_PORT")
+	EmailFrom         = GetEnvString("EMAIL_FROM")
+	EmailSmtpHost     = GetEnvString("EMAIL_SMTP_HOST")
+	EmailSmtpUser     = GetEnvString("EMAIL_SMTP_USER", "")
+	EmailSmtpPassword = GetEnvString("EMAIL_SMTP_PASSWORD", "")
 )
 
 func GetEnvInt(key string, defaultValue ...int) int {

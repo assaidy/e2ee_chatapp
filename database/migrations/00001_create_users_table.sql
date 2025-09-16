@@ -6,7 +6,7 @@ create table users (
     username varchar(50) not null unique,
     email varchar(254) not null unique,
     password_hash varchar(100) not null,
-    verified bool not null default false, -- email is verified
+    email_is_verified bool not null default false,
     joined_at timestamptz not null default now(),
 
     primary key (id)

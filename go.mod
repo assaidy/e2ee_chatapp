@@ -29,6 +29,7 @@ require (
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b // indirect
+	golang.org/x/text v0.29.0 // indirect
 )
 
 require (
@@ -36,6 +37,7 @@ require (
 	github.com/gofiber/fiber/v2 v2.52.9
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
+	github.com/wneessen/go-mail v0.7.0
 	golang.org/x/crypto v0.40.0
 	golang.org/x/sys v0.34.0 // indirect
 )

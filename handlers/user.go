@@ -43,9 +43,22 @@ func (me *UserHandler) HandleRegister(c *fiber.Ctx) error {
 		return err
 	}
 
-	// TODO: verify email
-
 	return c.SendStatus(fiber.StatusCreated)
+}
+
+func (me *UserHandler) HandleVerifyEmail(c *fiber.Ctx) error {
+	token := c.Query("token")
+	if token == "" {
+		return c.Status(fiber.StatusBadRequest).SendString("missing token query param")
+	}
+
+	if err, ok := me.UserService.VerifyEmail(token); err != nil {
+		return err
+	} else if !ok {
+		return c.Status(fiber.StatusBadRequest).SendString("invalid verification token")
+	}
+
+	return c.SendStatus(fiber.StatusOK)
 }
 
 func (me *UserHandler) HandleLogin(c *fiber.Ctx) error {
@@ -61,6 +74,9 @@ func (me *UserHandler) HandleLogin(c *fiber.Ctx) error {
 	if err != nil {
 		if errors.Is(err, services.ErrUnauthorized) {
 			return c.SendStatus(fiber.StatusUnauthorized)
+		} 
+		if errors.Is(err, services.ErrEmailNotVerified) {
+			return c.Status(fiber.StatusForbidden).SendString("please verify your email first. check your email inbox.")
 		}
 		return err
 	}
@@ -144,7 +160,6 @@ func (me *UserHandler) HandleLogout(c *fiber.Ctx) error {
 func (me *UserHandler) HandleUpdateUser(c *fiber.Ctx) error {
 	userID := GetCurrentUserID(c)
 	params := services.UpdateUserParams{
-		UserID:         userID,
 		Name:           c.FormValue("name"),
 		Username:       c.FormValue("username"),
 		Email:          c.FormValue("email"),
@@ -152,7 +167,7 @@ func (me *UserHandler) HandleUpdateUser(c *fiber.Ctx) error {
 		VerifyPassword: c.FormValue("verify_password"),
 	}
 
-	if err := me.UserService.UpdateUser(params); err != nil {
+	if err := me.UserService.UpdateUser(userID, params); err != nil {
 		if errors.Is(err, services.ErrNotFound) {
 			c.ClearCookie("session_id")
 			c.ClearCookie("session_token")

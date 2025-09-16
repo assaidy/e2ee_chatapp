@@ -7,6 +7,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -33,6 +34,15 @@ func (q *Queries) CheckUsername(ctx context.Context, username string) (bool, err
 	return exists, err
 }
 
+const deleteExpiredEmailVerificationTokens = `-- name: DeleteExpiredEmailVerificationTokens :exec
+delete from email_verification_tokens where expires_at <= now()
+`
+
+func (q *Queries) DeleteExpiredEmailVerificationTokens(ctx context.Context) error {
+	_, err := q.exec(ctx, q.deleteExpiredEmailVerificationTokensStmt, deleteExpiredEmailVerificationTokens)
+	return err
+}
+
 const deleteUserByID = `-- name: DeleteUserByID :exec
 delete from users where id = $1
 `
@@ -42,8 +52,24 @@ func (q *Queries) DeleteUserByID(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+const getEmailVerificationTokenByID = `-- name: GetEmailVerificationTokenByID :one
+select id, user_id, created_at, expires_at from email_verification_tokens where id = $1
+`
+
+func (q *Queries) GetEmailVerificationTokenByID(ctx context.Context, id uuid.UUID) (EmailVerificationToken, error) {
+	row := q.queryRow(ctx, q.getEmailVerificationTokenByIDStmt, getEmailVerificationTokenByID, id)
+	var i EmailVerificationToken
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.CreatedAt,
+		&i.ExpiresAt,
+	)
+	return i, err
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
-select id, name, username, email, password_hash, verified, joined_at from users where email = $1
+select id, name, username, email, password_hash, email_is_verified, joined_at from users where email = $1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -55,14 +81,14 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.Username,
 		&i.Email,
 		&i.PasswordHash,
-		&i.Verified,
+		&i.EmailIsVerified,
 		&i.JoinedAt,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-select id, name, username, email, password_hash, verified, joined_at from users where id = $1
+select id, name, username, email, password_hash, email_is_verified, joined_at from users where id = $1
 `
 
 func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
@@ -74,10 +100,32 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.Username,
 		&i.Email,
 		&i.PasswordHash,
-		&i.Verified,
+		&i.EmailIsVerified,
 		&i.JoinedAt,
 	)
 	return i, err
+}
+
+const insertEmailVerificationToken = `-- name: InsertEmailVerificationToken :exec
+insert into email_verification_tokens (id, user_id, created_at, expires_at)
+values ($1, $2, $3, $4)
+`
+
+type InsertEmailVerificationTokenParams struct {
+	ID        uuid.UUID
+	UserID    uuid.UUID
+	CreatedAt time.Time
+	ExpiresAt time.Time
+}
+
+func (q *Queries) InsertEmailVerificationToken(ctx context.Context, arg InsertEmailVerificationTokenParams) error {
+	_, err := q.exec(ctx, q.insertEmailVerificationTokenStmt, insertEmailVerificationToken,
+		arg.ID,
+		arg.UserID,
+		arg.CreatedAt,
+		arg.ExpiresAt,
+	)
+	return err
 }
 
 const insertUser = `-- name: InsertUser :exec
@@ -101,6 +149,15 @@ func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) error {
 		arg.Email,
 		arg.PasswordHash,
 	)
+	return err
+}
+
+const markEmailAsVerified = `-- name: MarkEmailAsVerified :exec
+update users set email_is_verified = true where id = $1
+`
+
+func (q *Queries) MarkEmailAsVerified(ctx context.Context, id uuid.UUID) error {
+	_, err := q.exec(ctx, q.markEmailAsVerifiedStmt, markEmailAsVerified, id)
 	return err
 }
 

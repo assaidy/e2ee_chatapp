@@ -29,8 +29,8 @@ func main() {
 	if err != nil {
 		logger.Fatal("error connecting to postgres db", "err", err)
 	}
-	pingCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	pingCtx, workersCtxCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer workersCtxCancel()
 	if err := db.PingContext(pingCtx); err != nil {
 		logger.Fatal("error pinging postgres db", "err", err)
 	}
@@ -39,7 +39,12 @@ func main() {
 	db.SetConnMaxLifetime(1 * time.Hour)
 	db.SetConnMaxIdleTime(15 * time.Minute)
 
+	workersCtx, workersCtxCancel := context.WithCancel(context.Background())
+	defer workersCtxCancel()
+
 	userService := services.NewUserService(logger, db)
+	go userService.StartEmailVerificationTokenCleanupWorker(workersCtx)
+
 	userHandler := handlers.NewUserHandler(logger, userService)
 
 	server := fiber.New(fiber.Config{
@@ -52,9 +57,10 @@ func main() {
 	{
 		v1 := api.Group("/v1")
 		{
-			v1.Post("users/register", userHandler.HandleRegister)
-			v1.Post("users/login", userHandler.HandleLogin)
-			v1.Post("users/logout", userHandler.WithAuthentication, userHandler.HandleLogout)
+			v1.Post("/users/register", userHandler.HandleRegister)
+			v1.Get("/users/emails/verify", userHandler.HandleVerifyEmail)
+			v1.Post("/users/login", userHandler.HandleLogin)
+			v1.Post("/users/logout", userHandler.WithAuthentication, userHandler.HandleLogout)
 			v1.Put("/users", userHandler.WithAuthentication, userHandler.HandleUpdateUser)
 			v1.Delete("/users", userHandler.WithAuthentication, userHandler.HandleDeleteUser)
 		}
@@ -81,9 +87,9 @@ func main() {
 	case <-exitChan:
 	}
 
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
+	shutdownCtx, shutdownCtxCancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer shutdownCtxCancel()
 	if err := server.ShutdownWithContext(shutdownCtx); err != nil {
-		logger.Fatal("failed to shutdown server", "error", err)
+		logger.Error("failed to shutdown server", "error", err)
 	}
 }

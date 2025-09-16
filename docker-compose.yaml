@@ -23,3 +23,10 @@ services:
     command: valkey-server --save 60 1 --loglevel warning
     volumes:
       - "${VALKEY_DATA_PATH}:/data"
+
+  papercut_smtp:
+    image: changemakerstudiosus/papercut-smtp:latest
+    restart: "no"
+    ports:
+      - 4000:80
+      - 25:25

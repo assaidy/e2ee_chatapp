@@ -25,3 +25,16 @@ where id = $5;
 
 -- name: DeleteUserByID :exec
 delete from users where id = $1;
+
+-- name: InsertEmailVerificationToken :exec
+insert into email_verification_tokens (id, user_id, created_at, expires_at)
+values ($1, $2, $3, $4);
+
+-- name: DeleteExpiredEmailVerificationTokens :exec
+delete from email_verification_tokens where expires_at <= now();
+
+-- name: GetEmailVerificationTokenByID :one
+select * from email_verification_tokens where id = $1;
+
+-- name: MarkEmailAsVerified :exec
+update users set email_is_verified = true where id = $1;

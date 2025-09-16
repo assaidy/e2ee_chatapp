@@ -10,6 +10,13 @@ import (
 	"github.com/google/uuid"
 )
 
+type EmailVerificationToken struct {
+	ID        uuid.UUID
+	UserID    uuid.UUID
+	CreatedAt time.Time
+	ExpiresAt time.Time
+}
+
 type Session struct {
 	ID           uuid.UUID
 	UserID       uuid.UUID
@@ -22,11 +29,11 @@ type Session struct {
 }
 
 type User struct {
-	ID           uuid.UUID
-	Name         string
-	Username     string
-	Email        string
-	PasswordHash string
-	Verified     bool
-	JoinedAt     time.Time
+	ID              uuid.UUID
+	Name            string
+	Username        string
+	Email           string
+	PasswordHash    string
+	EmailIsVerified bool
+	JoinedAt        time.Time
 }

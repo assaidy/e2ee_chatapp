@@ -8,9 +8,10 @@ import (
 )
 
 var (
-	ErrUnauthorized = errors.New("Unauthorized Error")
-	ErrValidation   = errors.New("Validation Error")
-	ErrNotFound     = errors.New("NotFound Error")
+	ErrUnauthorized     = errors.New("Unauthorized Error")
+	ErrValidation       = errors.New("Validation Error")
+	ErrNotFound         = errors.New("NotFound Error")
+	ErrEmailNotVerified = errors.New("Email Not Verified Error")
 )
 
 func ExtractValidationErrors(err error) validation.Errors {
