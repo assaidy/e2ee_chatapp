@@ -8,7 +8,7 @@ These features give you a working secure 1-to-1 chat system.
 - [X] **Auth & user profile**  
   Register, log in, and manage basic user information.
 
-- [ ] **Email verification**  
+- [x] **Email verification**  
   After registration, send a token via email. User clicks to verify their account. Helps prevent fake accounts.
 
 - [ ] **Password reset (forgot/change password)**  
