@@ -128,7 +128,7 @@ func (me *AuthHandler) HandleLogin(c *fiber.Ctx) error {
 
 func (me *AuthHandler) WithSession(c *fiber.Ctx) error {
 	var (
-		sessionIDstr    = c.Cookies("session-id")
+		sessionIDstr = c.Cookies("session-id")
 		sessionToken = c.Cookies("session-token")
 		csrfToken    = c.Get("X-CSRF-Token")
 	)
@@ -148,7 +148,7 @@ func (me *AuthHandler) WithSession(c *fiber.Ctx) error {
 			return fiber.ErrUnauthorized
 		}
 		return fmt.Errorf("failed to validate sessoin: %w", err)
-	} 
+	}
 
 	c.Locals("auth.credentialsID", credentialsID)
 	return c.Next()

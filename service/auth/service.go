@@ -189,7 +189,7 @@ func (me *AuthService) ValidateSession(sessionID uuid.UUID, sessionToken, csrfTo
 	ctx := context.Background()
 	var zero uuid.UUID
 
-	session, err := me.queries.GetSessionByID(ctx, sessionID) 
+	session, err := me.queries.GetSessionByID(ctx, sessionID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return zero, service.ErrUnauthorized

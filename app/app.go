@@ -39,7 +39,7 @@ func (me *App) Run() error {
 	})
 	server.Use(handler.WithLogging(me.logger))
 	me.loadAuthRoutes(server)
-	// me.loadUserRoutes(router)
+	me.loadUserRoutes(server)
 
 	listenErrChan := make(chan error, 1)
 	go func() {
@@ -69,12 +69,12 @@ func (me *App) Run() error {
 }
 
 func (me *App) loadAuthRoutes(server *fiber.App) {
-	h := handler.NewAuthHandler(
-		me.authService,
-		me.userService,
-	)
+	ah := handler.NewAuthHandler(me.authService, me.userService)
 
-	server.Post("/register", h.HandleRegister)
-	server.Get("/verify-email", h.HandleVerifyEmail)
-	server.Get("/login", h.HandleLogin)
+	server.Post("/register", ah.HandleRegister)
+	server.Get("/verify-email", ah.HandleVerifyEmail)
+	server.Get("/login", ah.HandleLogin)
 }
+
+// TODO:
+func (me *App) loadUserRoutes(server *fiber.App) {}
