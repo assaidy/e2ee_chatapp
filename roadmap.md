@@ -71,3 +71,9 @@ Features that harden the system and prepare it for production scale.
 - The MVP focuses on **secure 1-to-1 chat** with working encryption.  
 - Nice-to-have features extend functionality to groups, media, and better UX.  
 - Advanced features ensure the system is **secure and scalable** in production.
+
+---
+
+## References:
+- <https://medium.com/@ahsanmubariz/end-to-end-encryption-e2ee-a-deep-dive-with-simple-example-in-javascript-d97b1b880d4d>
+- <https://www.ibm.com/think/topics/end-to-end-encryption>
