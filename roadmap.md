@@ -11,17 +11,8 @@ These features give you a working secure 1-to-1 chat system.
 - [x] **Email verification**  
   After registration, send a token via email. User clicks to verify their account. Helps prevent fake accounts.
 
-- [ ] **Public key upload during registration**  
-  Clients generate a key pair locally. The public key is uploaded to the server so others can start encrypted chats.
-
-- [ ] **Secure session establishment (X3DH / Double Ratchet)**  
-  Protocols to let two users agree on shared session keys securely. This is how chats stay end-to-end encrypted.
-
 - [ ] **Create conversations (1-1 chat)**  
   Store metadata for chats between two users (conversation ID, participants).
-
-- [ ] **Send/receive encrypted messages**  
-  Clients encrypt before sending. The server only stores ciphertext, not plaintext.
 
 - [ ] **Offline message queue (store & forward)**  
   If a user is offline, the server holds their encrypted messages and delivers them once they reconnect.
@@ -34,23 +25,17 @@ Makes the app more usable and reliable but not strictly needed for a demo.
 - [ ] **Password reset (forgot/change password)**  
   Generate a one-time token for password resets. Logged-in users can change their password directly.
 
-- [ ] **Key rotation & backup strategy**  
-  Allow users/devices to replace old keys and recover from lost devices without losing chats.
-
-- [ ] **Device management**  
-  APIs to link/unlink devices and list active sessions. Each device has its own key pair.
+- [ ] **Session management**  
+  link/unlink sessions and list active sessions.
 
 - [ ] **Message ordering & delivery receipts**  
   Ensure messages appear in the correct order and support “delivered/read” acknowledgements.
 
 - [ ] **Group chats (basic)**  
-  Store group metadata and allow multiple participants to exchange encrypted messages.
+  Store group metadata and allow multiple participants to exchange messages.
 
 - [ ] **Group membership management**  
   APIs for inviting, removing, or leaving a group.
-
-- [ ] **Group key distribution**  
-  Manage group keys securely. When someone joins/leaves, rotate keys so ex-members lose access.
 
 - [ ] **Message deletion & retention policies**  
   Support deleting messages (local or global) and optional auto-expiry after a set time.
@@ -60,6 +45,9 @@ Makes the app more usable and reliable but not strictly needed for a demo.
 
 - [ ] **Push notifications (privacy-preserving)**  
   Send generic “new message” alerts without leaking message content.
+
+- [ ] **E2EE 1-to-1 chats**
+  allow creating E2EE 1-to-1 (only two devices/participants) private chats.
 
 ---
 
