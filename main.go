@@ -9,11 +9,15 @@ import (
 	"context"
 	"log/slog"
 	"os"
+
+	"github.com/charmbracelet/log"
 )
 
 func main() {
-	// logHander := slog.NewJSONHandler(os.Stdout, nil)
-	logHander := slog.NewTextHandler(os.Stdout, nil)
+	logHander := log.NewWithOptions(os.Stdout, log.Options{
+		Formatter:       log.TextFormatter,
+		ReportTimestamp: true,
+	})
 	logger := slog.New(logHander)
 
 	workersCtx, workersCancel := context.WithCancel(context.Background())
