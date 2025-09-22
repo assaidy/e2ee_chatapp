@@ -7,6 +7,8 @@ import (
 
 	"context"
 	"time"
+
+	_ "github.com/lib/pq"
 )
 
 var DB *sql.DB
