@@ -1,6 +1,6 @@
 include .env
 
-GOOSE_ENV=GOOSE_DRIVER="postgres" GOOSE_DBSTRING="$(PG_URL)" GOOSE_MIGRATION_DIR="./database/migrations/"
+GOOSE_ENV=GOOSE_DRIVER="postgres" GOOSE_DBSTRING="$(PG_URL)" GOOSE_MIGRATION_DIR="./db/migrations/"
 
 all: build
 

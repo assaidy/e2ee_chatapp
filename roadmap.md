@@ -11,9 +11,6 @@ These features give you a working secure 1-to-1 chat system.
 - [x] **Email verification**  
   After registration, send a token via email. User clicks to verify their account. Helps prevent fake accounts.
 
-- [ ] **Password reset (forgot/change password)**  
-  Generate a one-time token for password resets. Logged-in users can change their password directly.
-
 - [ ] **Public key upload during registration**  
   Clients generate a key pair locally. The public key is uploaded to the server so others can start encrypted chats.
 
@@ -33,6 +30,9 @@ These features give you a working secure 1-to-1 chat system.
 
 ## 🚀 Nice-to-have
 Makes the app more usable and reliable but not strictly needed for a demo.
+
+- [ ] **Password reset (forgot/change password)**  
+  Generate a one-time token for password resets. Logged-in users can change their password directly.
 
 - [ ] **Key rotation & backup strategy**  
   Allow users/devices to replace old keys and recover from lost devices without losing chats.
@@ -71,6 +71,8 @@ Features that harden the system and prepare it for production scale.
 
 - [ ] **Rate limiting / brute-force protection**  
   Limit how many times an IP/account can hit sensitive endpoints like `/login`.
+
+- [ ] setup CORS (cross origin resource sharing)
 
 - [ ] **Performance/load testing**  
   Benchmark message delivery under heavy load. Optimize DB queries and network usage.

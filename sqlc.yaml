@@ -1,14 +1,15 @@
 version: "2"
 sql:
   - engine: "postgresql"
-    schema: "./database/migrations"
-    queries: "./database/queries/"
+    schema: "./db/migrations/"
+    queries: "./db/queries/"
     gen:
       go:
-        package: "repository"
-        out: "./repository/"
+        package: "repo"
+        out: "./repo/"
         emit_prepared_queries: true
         emit_empty_slices: true
+        emit_pointers_for_null_types: true
         overrides:
           - db_type: "uuid"
             go_type:

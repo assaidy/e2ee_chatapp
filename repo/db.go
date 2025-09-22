@@ -2,7 +2,7 @@
 // versions:
 //   sqlc v1.30.0
 
-package repository
+package repo
 
 import (
 	"context"
@@ -24,20 +24,23 @@ func New(db DBTX) *Queries {
 func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	q := Queries{db: db}
 	var err error
+	if q.beginStmt, err = db.PrepareContext(ctx, begin); err != nil {
+		return nil, fmt.Errorf("error preparing query Begin: %w", err)
+	}
 	if q.checkEmailStmt, err = db.PrepareContext(ctx, checkEmail); err != nil {
 		return nil, fmt.Errorf("error preparing query CheckEmail: %w", err)
 	}
 	if q.checkUsernameStmt, err = db.PrepareContext(ctx, checkUsername); err != nil {
 		return nil, fmt.Errorf("error preparing query CheckUsername: %w", err)
 	}
-	if q.deleteExpiredEmailVerificationTokensStmt, err = db.PrepareContext(ctx, deleteExpiredEmailVerificationTokens); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteExpiredEmailVerificationTokens: %w", err)
+	if q.commitStmt, err = db.PrepareContext(ctx, commit); err != nil {
+		return nil, fmt.Errorf("error preparing query Commit: %w", err)
 	}
-	if q.deleteSessionForUserStmt, err = db.PrepareContext(ctx, deleteSessionForUser); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteSessionForUser: %w", err)
+	if q.deleteStaleEmailVerificationTokensStmt, err = db.PrepareContext(ctx, deleteStaleEmailVerificationTokens); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteStaleEmailVerificationTokens: %w", err)
 	}
-	if q.deleteUserByIDStmt, err = db.PrepareContext(ctx, deleteUserByID); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteUserByID: %w", err)
+	if q.getCredentialsByEmailStmt, err = db.PrepareContext(ctx, getCredentialsByEmail); err != nil {
+		return nil, fmt.Errorf("error preparing query GetCredentialsByEmail: %w", err)
 	}
 	if q.getEmailVerificationTokenByIDStmt, err = db.PrepareContext(ctx, getEmailVerificationTokenByID); err != nil {
 		return nil, fmt.Errorf("error preparing query GetEmailVerificationTokenByID: %w", err)
@@ -45,11 +48,8 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getSessionByIDStmt, err = db.PrepareContext(ctx, getSessionByID); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSessionByID: %w", err)
 	}
-	if q.getUserByEmailStmt, err = db.PrepareContext(ctx, getUserByEmail); err != nil {
-		return nil, fmt.Errorf("error preparing query GetUserByEmail: %w", err)
-	}
-	if q.getUserByIDStmt, err = db.PrepareContext(ctx, getUserByID); err != nil {
-		return nil, fmt.Errorf("error preparing query GetUserByID: %w", err)
+	if q.insertCredentialsStmt, err = db.PrepareContext(ctx, insertCredentials); err != nil {
+		return nil, fmt.Errorf("error preparing query InsertCredentials: %w", err)
 	}
 	if q.insertEmailVerificationTokenStmt, err = db.PrepareContext(ctx, insertEmailVerificationToken); err != nil {
 		return nil, fmt.Errorf("error preparing query InsertEmailVerificationToken: %w", err)
@@ -63,17 +63,19 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.markEmailAsVerifiedStmt, err = db.PrepareContext(ctx, markEmailAsVerified); err != nil {
 		return nil, fmt.Errorf("error preparing query MarkEmailAsVerified: %w", err)
 	}
-	if q.updateSessionLastActiveStmt, err = db.PrepareContext(ctx, updateSessionLastActive); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateSessionLastActive: %w", err)
-	}
-	if q.updateUserStmt, err = db.PrepareContext(ctx, updateUser); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateUser: %w", err)
+	if q.rollbackStmt, err = db.PrepareContext(ctx, rollback); err != nil {
+		return nil, fmt.Errorf("error preparing query Rollback: %w", err)
 	}
 	return &q, nil
 }
 
 func (q *Queries) Close() error {
 	var err error
+	if q.beginStmt != nil {
+		if cerr := q.beginStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing beginStmt: %w", cerr)
+		}
+	}
 	if q.checkEmailStmt != nil {
 		if cerr := q.checkEmailStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing checkEmailStmt: %w", cerr)
@@ -84,19 +86,19 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing checkUsernameStmt: %w", cerr)
 		}
 	}
-	if q.deleteExpiredEmailVerificationTokensStmt != nil {
-		if cerr := q.deleteExpiredEmailVerificationTokensStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteExpiredEmailVerificationTokensStmt: %w", cerr)
+	if q.commitStmt != nil {
+		if cerr := q.commitStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing commitStmt: %w", cerr)
 		}
 	}
-	if q.deleteSessionForUserStmt != nil {
-		if cerr := q.deleteSessionForUserStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteSessionForUserStmt: %w", cerr)
+	if q.deleteStaleEmailVerificationTokensStmt != nil {
+		if cerr := q.deleteStaleEmailVerificationTokensStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteStaleEmailVerificationTokensStmt: %w", cerr)
 		}
 	}
-	if q.deleteUserByIDStmt != nil {
-		if cerr := q.deleteUserByIDStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteUserByIDStmt: %w", cerr)
+	if q.getCredentialsByEmailStmt != nil {
+		if cerr := q.getCredentialsByEmailStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getCredentialsByEmailStmt: %w", cerr)
 		}
 	}
 	if q.getEmailVerificationTokenByIDStmt != nil {
@@ -109,14 +111,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getSessionByIDStmt: %w", cerr)
 		}
 	}
-	if q.getUserByEmailStmt != nil {
-		if cerr := q.getUserByEmailStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getUserByEmailStmt: %w", cerr)
-		}
-	}
-	if q.getUserByIDStmt != nil {
-		if cerr := q.getUserByIDStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getUserByIDStmt: %w", cerr)
+	if q.insertCredentialsStmt != nil {
+		if cerr := q.insertCredentialsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing insertCredentialsStmt: %w", cerr)
 		}
 	}
 	if q.insertEmailVerificationTokenStmt != nil {
@@ -139,14 +136,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing markEmailAsVerifiedStmt: %w", cerr)
 		}
 	}
-	if q.updateSessionLastActiveStmt != nil {
-		if cerr := q.updateSessionLastActiveStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateSessionLastActiveStmt: %w", cerr)
-		}
-	}
-	if q.updateUserStmt != nil {
-		if cerr := q.updateUserStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateUserStmt: %w", cerr)
+	if q.rollbackStmt != nil {
+		if cerr := q.rollbackStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing rollbackStmt: %w", cerr)
 		}
 	}
 	return err
@@ -186,43 +178,41 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                                       DBTX
-	tx                                       *sql.Tx
-	checkEmailStmt                           *sql.Stmt
-	checkUsernameStmt                        *sql.Stmt
-	deleteExpiredEmailVerificationTokensStmt *sql.Stmt
-	deleteSessionForUserStmt                 *sql.Stmt
-	deleteUserByIDStmt                       *sql.Stmt
-	getEmailVerificationTokenByIDStmt        *sql.Stmt
-	getSessionByIDStmt                       *sql.Stmt
-	getUserByEmailStmt                       *sql.Stmt
-	getUserByIDStmt                          *sql.Stmt
-	insertEmailVerificationTokenStmt         *sql.Stmt
-	insertSessionStmt                        *sql.Stmt
-	insertUserStmt                           *sql.Stmt
-	markEmailAsVerifiedStmt                  *sql.Stmt
-	updateSessionLastActiveStmt              *sql.Stmt
-	updateUserStmt                           *sql.Stmt
+	db                                     DBTX
+	tx                                     *sql.Tx
+	beginStmt                              *sql.Stmt
+	checkEmailStmt                         *sql.Stmt
+	checkUsernameStmt                      *sql.Stmt
+	commitStmt                             *sql.Stmt
+	deleteStaleEmailVerificationTokensStmt *sql.Stmt
+	getCredentialsByEmailStmt              *sql.Stmt
+	getEmailVerificationTokenByIDStmt      *sql.Stmt
+	getSessionByIDStmt                     *sql.Stmt
+	insertCredentialsStmt                  *sql.Stmt
+	insertEmailVerificationTokenStmt       *sql.Stmt
+	insertSessionStmt                      *sql.Stmt
+	insertUserStmt                         *sql.Stmt
+	markEmailAsVerifiedStmt                *sql.Stmt
+	rollbackStmt                           *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                                       tx,
-		tx:                                       tx,
-		checkEmailStmt:                           q.checkEmailStmt,
-		checkUsernameStmt:                        q.checkUsernameStmt,
-		deleteExpiredEmailVerificationTokensStmt: q.deleteExpiredEmailVerificationTokensStmt,
-		deleteSessionForUserStmt:                 q.deleteSessionForUserStmt,
-		deleteUserByIDStmt:                       q.deleteUserByIDStmt,
-		getEmailVerificationTokenByIDStmt:        q.getEmailVerificationTokenByIDStmt,
-		getSessionByIDStmt:                       q.getSessionByIDStmt,
-		getUserByEmailStmt:                       q.getUserByEmailStmt,
-		getUserByIDStmt:                          q.getUserByIDStmt,
-		insertEmailVerificationTokenStmt:         q.insertEmailVerificationTokenStmt,
-		insertSessionStmt:                        q.insertSessionStmt,
-		insertUserStmt:                           q.insertUserStmt,
-		markEmailAsVerifiedStmt:                  q.markEmailAsVerifiedStmt,
-		updateSessionLastActiveStmt:              q.updateSessionLastActiveStmt,
-		updateUserStmt:                           q.updateUserStmt,
+		db:                                     tx,
+		tx:                                     tx,
+		beginStmt:                              q.beginStmt,
+		checkEmailStmt:                         q.checkEmailStmt,
+		checkUsernameStmt:                      q.checkUsernameStmt,
+		commitStmt:                             q.commitStmt,
+		deleteStaleEmailVerificationTokensStmt: q.deleteStaleEmailVerificationTokensStmt,
+		getCredentialsByEmailStmt:              q.getCredentialsByEmailStmt,
+		getEmailVerificationTokenByIDStmt:      q.getEmailVerificationTokenByIDStmt,
+		getSessionByIDStmt:                     q.getSessionByIDStmt,
+		insertCredentialsStmt:                  q.insertCredentialsStmt,
+		insertEmailVerificationTokenStmt:       q.insertEmailVerificationTokenStmt,
+		insertSessionStmt:                      q.insertSessionStmt,
+		insertUserStmt:                         q.insertUserStmt,
+		markEmailAsVerifiedStmt:                q.markEmailAsVerifiedStmt,
+		rollbackStmt:                           q.rollbackStmt,
 	}
 }
